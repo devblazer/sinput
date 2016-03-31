@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        html,body {
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            position:relative;
+        }
+        #visual_mode > div {
+            display:none;
+        }
+        #visual_mode > .active {
+            display:block;
+        }
+        #visual_mode a {
+            cursor:pointer;
+        }
+    </style>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.2.min.js" integrity="sha256-lZFHibXzMHo3GGeehn1hudTAP3Sc0uKXBXAzHX1sjtk=" crossorigin="anonymous"></script>
+    <script src="js/threejs/three.min.js"></script>
+    <script src="js/threejs/controls/DeviceOrientationControls.js"></script>
+    <script src="js/threejs/renderers/Projector.js"></script>
+    <script src="js/threejs/renderers/CanvasRenderer.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var socket = io();
+
+            socket.on('error', console.error.bind(console));
+            socket.on('message', console.log.bind(console));
+
+            var is_vr = false
+            $('#choose_3d').on('click',function() {
+                $(document).on('keyup',function(e){
+                    keystate[e.keyCode] = false;
+                    keyreleased[e.keyCode] = (new Date()).getTime();
+                });
+                $(document).on('keydown',function(e){
+                    keystate[e.keyCode] = true;
+                });
+
+                start_game()
+            });
+            $('#choose_cardboard').on('click',function(){
+                $(this).closest('div').hide();
+                $('#choose_device').show();
+            });
+            $('#choose_pc').on('click',function(){
+                $(this).closest('div').hide();
+                $('#input_password').show();
+            });
+            $('#choose_phone').on('click',function(){
+                $(this).closest('div').hide();
+                $('#vr_password').show();
+            });
+
+            $('#submit_input_password').on('click',function(){
+                var password = $('#enter_input_password').val();
+                $(this).closest('div').hide();
+                $('#input_capture').show();
+                socket.emit('input_identifier',password);
+
+                $(document).on('keyup',function(e) {
+                    socket.emit('keyup', e.keyCode);
+                }).on('keydown',function(e) {
+                    socket.emit('keydown', e.keyCode);
+                });
+            });
+
+            var keystate = {};
+            var keyreleased = {};
+            var keymap = {up:38,down:40,left:37,right:39,space:32,enter:13,escape:27};
+
+            isKeyDown = function(key) {
+                if (keystate[keymap[key]])
+                    return true;
+                return false;
+            };
+            isKeyUp = function(key) {
+                if (keystate[keymap[key]])
+                    return false;
+                return true;
+            }
+            grabKeyPressed = function(key) {
+                if (keyreleased[keymap[key]]) {
+                    if ((new Date()).getTime() - 200 < keyreleased[keymap[key]]) {
+                        keyreleased[keymap[key]] = false;
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            $('#submit_vr_password').on('click',function() {
+                var password = $('#enter_vr_password').val();
+                is_vr = true;
+                socket.emit('vr_identifier', password);
+                socket.on('keyup',function(keyCode){
+                    keystate[keyCode] = false;
+                    keyreleased[keyCode] = (new Date()).getTime();
+                });
+                socket.on('keydown',function(keyCode){
+                    keystate[keyCode] = true;
+                });
+                start_game();
+            });
+
+            function start_game() {
+                $('#visual_mode').hide();
+                $('#game').show();
+                var laststr = '';
+                window.setInterval(function(){
+                    var str = JSON.stringify(keystate);
+                    if (str != laststr)
+                        $('#key_states').html(str);
+                    laststr = str;
+                },50);
+
+                var container;
+
+                var camera, scene, renderer, controls;
+
+                var cube, plane;
+
+                var targetRotation = 0;
+                var targetRotationOnMouseDown = 0;
+
+                var mouseX = 0;
+                var mouseXOnMouseDown = 0;
+
+                var windowHalfX = window.innerWidth / 2;
+                var windowHalfY = window.innerHeight / 2;
+
+                init();
+                animate();
+
+                function init() {
+                    container = document.getElementById('game');
+
+                    camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+                    camera.position.y = 150;
+                    camera.position.z = 500;
+
+                    controls = new THREE.DeviceOrientationControls( camera );
+
+                    scene = new THREE.Scene();
+
+                    // Cube
+
+                    var geometry = new THREE.BoxGeometry( 200, 200, 200 );
+
+                    for ( var i = 0; i < geometry.faces.length; i += 2 ) {
+
+                        var hex = Math.random() * 0xffffff;
+                        geometry.faces[ i ].color.setHex( hex );
+                        geometry.faces[ i + 1 ].color.setHex( hex );
+
+                    }
+
+                    var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
+
+                    cube = new THREE.Mesh( geometry, material );
+                    cube.position.y = 150;
+                    scene.add( cube );
+
+                    // Plane
+
+                    var geometry = new THREE.PlaneBufferGeometry( 200, 200 );
+                    geometry.rotateX( - Math.PI / 2 );
+
+                    var material = new THREE.MeshBasicMaterial( { color: 0xe0e0e0, overdraw: 0.5 } );
+
+                    plane = new THREE.Mesh( geometry, material );
+                    scene.add( plane );
+
+                    renderer = new THREE.CanvasRenderer();
+                    renderer.setClearColor( 0xf0f0f0 );
+                    renderer.setPixelRatio( window.devicePixelRatio );
+                    renderer.setSize( window.innerWidth, window.innerHeight );
+                    container.appendChild( renderer.domElement );
+
+                    window.addEventListener( 'resize', onWindowResize, false );
+                }
+
+                function onWindowResize() {
+
+                    windowHalfX = window.innerWidth / 2;
+                    windowHalfY = window.innerHeight / 2;
+
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+
+                    renderer.setSize( window.innerWidth, window.innerHeight );
+
+                }
+
+                function animate() {
+
+                    requestAnimationFrame( animate );
+
+                    render();
+
+                }
+
+                function render() {
+
+                    plane.rotation.y = cube.rotation.y += ( targetRotation - cube.rotation.y ) * 0.05;
+                    controls.update();
+                    renderer.render( scene, camera );
+
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <section id="visual_mode">
+        <div class="active" id="choose_visual">
+            <h3>Please choose visual mode</h3>
+            <a id="choose_3d">Normal 3D for PC only</a><br />
+            <a id="choose_cardboard">Google cardboard</a>
+        </div>
+        <div id="choose_device">
+            <h3>What is this device?</h3>
+            <a id="choose_pc">Desktop PC / tablet with a keyboard</a><br />
+            <a id="choose_phone">Mobile phone without a keyboard</a>
+        </div>
+        <div id="input_password">
+            <h3>Enter password</h3>
+            <input id="enter_input_password" />
+            <p>
+                This PC will be used to capture input from your keyboard while you use
+                your phone with google cardboard to play the game.<br />
+                Please enter a password that we will use to identify you.<br />
+                You can then visit this website on a mobile phone at the same time and select:
+                Google cardboard -> Mobile phone. And then fill in the same password to connect the two.
+            </p>
+            <a id="submit_input_password">Submit</a>
+        </div>
+        <div id="vr_password">
+            <h3>Enter password</h3>
+            <input id="enter_vr_password" />
+            <p>
+                This mobile phone will be used to display the game in VR while you
+                use a separate PC to capture input from your a keyboard.<br />
+                Please enter a password that we will use to identify you.<br />
+                You can then visit this website on a pc at the same time and select:
+                Google cardboard -> Desktop PC / tablet. And then fill in the same password to connect the two.
+            </p>
+            <a id="submit_vr_password">Submit</a>
+        </div>
+        <div id="input_capture">
+            <h1>Capturing of keyboard input has begun</h1>
+        </div>
+    </section>
+    <section id="game">
+
+    </section>
+</body>
+</html>

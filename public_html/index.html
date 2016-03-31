@@ -182,12 +182,14 @@
                     renderer.setSize( window.innerWidth, window.innerHeight );
                     container.appendChild( renderer.domElement );
 
-                    document.addEventListener('click', onScreenTapped,false);
+                    window.setTimeout(function(){
+                        document.addEventListener('click', onScreenTapped,false);
+                    },1000);
                     window.addEventListener( 'resize', onWindowResize, false );
                 }
 
+
                 function onScreenTapped() {
-                    alert('shit');
                     controls.reset();
                 }
 

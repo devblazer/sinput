@@ -86,8 +86,8 @@ THREE.DeviceOrientationControls = function ( object ) {
 	this.update = function () {
 
 		if ( scope.enabled === false ) return;
-
-		var alpha  = scope.deviceOrientation.alpha ? THREE.Math.degToRad( scope.deviceOrientation.alpha-base.alpha+90 ) : 0; // Z
+alert(scope.deviceOrientation.alpha);
+		var alpha  = scope.deviceOrientation.alpha ? THREE.Math.degToRad( scope.deviceOrientation.alpha-base.alpha-90 ) : 0; // Z
 		var beta   = scope.deviceOrientation.beta  ? THREE.Math.degToRad( scope.deviceOrientation.beta-base.beta  ) : 0; // X'
 		var gamma  = scope.deviceOrientation.gamma ? THREE.Math.degToRad( scope.deviceOrientation.gamma-base.gamma ) : 0; // Y''
 		var orient = scope.screenOrientation       ? THREE.Math.degToRad( scope.screenOrientation-base.orient       ) : 0; // O

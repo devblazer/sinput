@@ -186,8 +186,11 @@
                     window.addEventListener( 'resize', onWindowResize, false );
                 }
 
+                var count = 0;
                 function onScreenTapped() {
-                  controls.reset();
+                    count++;
+                    if (count>3)
+                        controls.reset();
                 }
 
                 function onWindowResize() {

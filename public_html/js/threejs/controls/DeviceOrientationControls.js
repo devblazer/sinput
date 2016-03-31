@@ -78,19 +78,18 @@ THREE.DeviceOrientationControls = function ( object ) {
 	var base = {alpha:0,beta:0,gamma:0,orient:0};
 	this.reset = function() {
 		base.alpha = scope.deviceOrientation.alpha;
-		//base.beta = scope.deviceOrientation.beta;
-		//base.gamma = scope.deviceOrientation.gamma;
-		//base.orient = scope.screenOrientation;
+		console.log(scope.deviceOrientation);
+		console.log(scope.screenOrientation);
 	};
 
 	this.update = function () {
 
 		if ( scope.enabled === false ) return;
-alert(scope.deviceOrientation.alpha);
+
 		var alpha  = scope.deviceOrientation.alpha ? THREE.Math.degToRad( scope.deviceOrientation.alpha-base.alpha-90 ) : 0; // Z
-		var beta   = scope.deviceOrientation.beta  ? THREE.Math.degToRad( scope.deviceOrientation.beta-base.beta  ) : 0; // X'
-		var gamma  = scope.deviceOrientation.gamma ? THREE.Math.degToRad( scope.deviceOrientation.gamma-base.gamma ) : 0; // Y''
-		var orient = scope.screenOrientation       ? THREE.Math.degToRad( scope.screenOrientation-base.orient       ) : 0; // O
+		var beta   = scope.deviceOrientation.beta  ? THREE.Math.degToRad( scope.deviceOrientation.beta  ) : 0; // X'
+		var gamma  = scope.deviceOrientation.gamma ? THREE.Math.degToRad( scope.deviceOrientation.gamma ) : 0; // Y''
+		var orient = scope.screenOrientation       ? THREE.Math.degToRad( scope.screenOrientation       ) : 0; // O
 
 		setObjectQuaternion( scope.object.quaternion, alpha, beta, gamma, orient );
 

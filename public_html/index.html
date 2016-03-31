@@ -23,7 +23,7 @@
     <script src="js/threejs/three.min.js"></script>
     <script src="js/threejs/controls/DeviceOrientationControls.js"></script>
     <script src="js/threejs/renderers/Projector.js"></script>
-    <script src="js/threejs/renderers/CanvasRenderer.js"></script>
+    <script src="js/threejs/effects/CardboardEffect.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -31,6 +31,26 @@
 
             socket.on('error', console.error.bind(console));
             socket.on('message', console.log.bind(console));
+
+            function getFullscreen() {
+                if ( document.documentElement.requestFullscreen ) {
+
+                    document.documentElement.requestFullscreen();
+
+                } else if ( document.documentElement.msRequestFullscreen ) {
+
+                    document.documentElement.msRequestFullscreen();
+
+                } else if ( document.documentElement.mozRequestFullScreen ) {
+
+                    document.documentElement.mozRequestFullScreen();
+
+                } else if ( document.documentElement.webkitRequestFullscreen ) {
+
+                    document.documentElement.webkitRequestFullscreen();
+
+                }
+            }
 
             var is_vr = false
             $('#choose_3d').on('click',function() {
@@ -41,7 +61,7 @@
                 $(document).on('keydown',function(e){
                     keystate[e.keyCode] = true;
                 });
-
+                getFullscreen();
                 start_game()
             });
             $('#choose_cardboard').on('click',function(){
@@ -105,6 +125,7 @@
                 socket.on('keydown',function(keyCode){
                     keystate[keyCode] = true;
                 });
+                getFullscreen();
                 start_game();
             });
 
@@ -121,15 +142,11 @@
 
                 var container;
 
-                var camera, scene, renderer, controls;
+                var camera, scene, renderer, orientation,trueRender,effect;
 
                 var cube, plane;
 
                 var targetRotation = 0;
-                var targetRotationOnMouseDown = 0;
-
-                var mouseX = 0;
-                var mouseXOnMouseDown = 0;
 
                 var windowHalfX = window.innerWidth / 2;
                 var windowHalfY = window.innerHeight / 2;
@@ -140,57 +157,36 @@
                 function init() {
                     container = document.getElementById('game');
 
-                    camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
-                    camera.position.y = 150;
-                    camera.position.z = 500;
+                    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+                    camera.position.y = 10;
+                    camera.position.z = 20;
 
-                    controls = new THREE.DeviceOrientationControls( camera );
+                    if (is_vr)
+                        orientation = new THREE.DeviceOrientationControls(camera);
 
                     scene = new THREE.Scene();
 
-                    // Cube
+                    var light = new THREE.AmbientLight(0x404040); // soft white light
+                    scene.add(light);
 
-                    var geometry = new THREE.BoxGeometry( 200, 200, 200 );
+                    var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+                    directionalLight.position.set(2, 3, 1);
+                    scene.add(directionalLight);
 
-                    for ( var i = 0; i < geometry.faces.length; i += 2 ) {
+                    renderer = new THREE.WebGLRenderer();
+                    renderer.setClearColor(0xf0f0f0);
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    trueRender = renderer;
+                    container.appendChild(renderer.domElement);
 
-                        var hex = Math.random() * 0xffffff;
-                        geometry.faces[ i ].color.setHex( hex );
-                        geometry.faces[ i + 1 ].color.setHex( hex );
-
+                    if (is_vr) {
+                        effect = new THREE.CardboardEffect(renderer);
+                        effect.setSize(window.innerWidth, window.innerHeight);
+                        trueRender = effect;
                     }
 
-                    var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors, overdraw: 0.5 } );
-
-                    cube = new THREE.Mesh( geometry, material );
-                    cube.position.y = 150;
-                    scene.add( cube );
-
-                    // Plane
-
-                    var geometry = new THREE.PlaneBufferGeometry( 200, 200 );
-                    geometry.rotateX( - Math.PI / 2 );
-
-                    var material = new THREE.MeshBasicMaterial( { color: 0xe0e0e0, overdraw: 0.5 } );
-
-                    plane = new THREE.Mesh( geometry, material );
-                    scene.add( plane );
-
-                    renderer = new THREE.CanvasRenderer();
-                    renderer.setClearColor( 0xf0f0f0 );
-                    renderer.setPixelRatio( window.devicePixelRatio );
-                    renderer.setSize( window.innerWidth, window.innerHeight );
-                    container.appendChild( renderer.domElement );
-
-                    window.setTimeout(function(){
-                        document.addEventListener('click', onScreenTapped,false);
-                    },1000);
                     window.addEventListener( 'resize', onWindowResize, false );
-                }
-
-
-                function onScreenTapped() {
-                    controls.reset();
                 }
 
                 function onWindowResize() {
@@ -201,13 +197,37 @@
                     camera.aspect = window.innerWidth / window.innerHeight;
                     camera.updateProjectionMatrix();
 
-                    renderer.setSize( window.innerWidth, window.innerHeight );
+                    trueRender.setSize( window.innerWidth, window.innerHeight );
 
                 }
+
+                var level_started = false;
 
                 function animate() {
 
                     requestAnimationFrame( animate );
+
+                    if (!level_started && grabKeyPressed('space')) {
+                        level_started = 0;
+                        if (is_vr)
+                            orientation.reset();
+                        renderer.setClearColor( 0x000000 );
+
+                        for (var x=0;x<8;x+=2)
+                            createPlatform(x,0,0,1,1*(0.6+(x/16)),0,0);
+                        for (var x=1;x<8;x+=2)
+                            createPlatform(x,1,0,1,0,1*(0.6+(x/16)),0);
+                        for (var x=0;x<8;x+=2)
+                            createPlatform(x,2,0,1,0,0,1*(0.6+(x/16)));
+                        for (var x=1;x<8;x+=2)
+                            createPlatform(x,3,0,1,1*(0.6+(x/16)),1*(0.6+(x/16)),0);
+                        for (var x=0;x<8;x+=2)
+                            createPlatform(x,4,0,1,1*(0.6+(x/16)),0,1*(0.6+(x/16)));
+                        for (var x=1;x<8;x+=2)
+                            createPlatform(x,5,0,1,0,1*(0.6+(x/16)),1*(0.6+(x/16)));
+                        for (var x=0;x<8;x+=2)
+                            createPlatform(x,6,0,1,1*(0.6+(x/16)),1*(0.6+(x/16)),1*(0.6+(x/16)));
+                    }
 
                     render();
 
@@ -215,10 +235,33 @@
 
                 function render() {
 
-                    plane.rotation.y = cube.rotation.y += ( targetRotation - cube.rotation.y ) * 0.05;
-                    controls.update();
-                    renderer.render( scene, camera );
+                    if (is_vr)
+                        orientation.update();
+                    trueRender.render( scene, camera );
 
+                }
+
+                function createPlatform(x,y,z,height,r,g,b) {
+                    var geometry = new THREE.BoxGeometry( 5, height, 10 );
+
+                    for ( var i = 0; i < geometry.faces.length; i += 1 ) {
+
+                        var hex = Math.random() * 0xffffff;
+                        geometry.faces[ i ].color.r = r;//setHex( hex );
+                        geometry.faces[ i ].color.g = g;//setHex( hex );
+                        geometry.faces[ i ].color.b = b;//setHex( hex );
+                        //geometry.faces[ i + 1 ].color.setHex( hex );
+
+                    }
+
+                    var material = new THREE.MeshLambertMaterial( { vertexColors: THREE.FaceColors } );
+
+                    cube = new THREE.Mesh( geometry, material );
+                    cube.position.x = (5*x)-17.5;
+                    cube.position.y = z-0.5;
+                    cube.position.z = 10*-y;
+                    scene.add( cube );
+                    return cube;
                 }
             }
         });

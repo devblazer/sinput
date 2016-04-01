@@ -163,7 +163,7 @@
 
                     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
                     camera.position.y = 15;
-                    camera.position.z = 40/(is_vr?1:2);
+                    camera.position.z = 50/(is_vr?1:2.5);
                     camera.rotation.x -= 0.3;
 
                     //if (is_vr)
@@ -190,7 +190,7 @@
                         effect.setSize(window.innerWidth, window.innerHeight);
                         trueRender = effect;
                     }
-
+/*
                     var onProgress = function ( xhr ) {
                         if ( xhr.lengthComputable ) {
                             var percentComplete = xhr.loaded / xhr.total * 100;
@@ -217,7 +217,7 @@
                             ship = object;
                             ship.applyMatrix( new THREE.Matrix4().makeTranslation(0, -0.175, 0) );
                             ship.applyMatrix( new THREE.Matrix4().makeRotationY(180) );
-                            ship.applyMatrix( new THREE.Matrix4().makeRotationX(-0.5) );
+                            ship.applyMatrix( new THREE.Matrix4().makeRotationX(-0.05) );
                             ship.scale.set(0.0125,0.0125,0.0125);
                             //ship.position.z = -50;
                             ship.position.x = 0;
@@ -227,7 +227,7 @@
                         }, onProgress, onError );
 
                     });
-
+*/
                     window.addEventListener( 'resize', onWindowResize, false );
                 }
 
@@ -306,11 +306,11 @@
                             if (isKeyUp('space'))
                                 jump_step = jump_step_max;
                             vvelocity -= gravity;
-                            ship.position.y += vvelocity;
+                            /*ship.position.y += vvelocity;
                             if (ship.position.y <= 0) {
                                 is_jumping = 0;
                                 ship.position.y = 0;
-                            }
+                            }*/
                         }
                         else {
                             if (isKeyDown('left')) {
@@ -337,8 +337,8 @@
                                     fvelocity = 0;
                             }
                         }
-                        ship.position.x += hvelocity;
-                        ship.position.z -= fvelocity;
+                      /*  ship.position.x += hvelocity;
+                        ship.position.z -= fvelocity;*/
                         camera.position.z -= fvelocity;
                     }
 

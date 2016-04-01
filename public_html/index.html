@@ -96,6 +96,9 @@
                 $(document).on('keyup',function(e) {
                     socket.emit('keychange', {state:'up',stamp:(new Date().getTime()),key: e.keyCode});
                 });
+                $(document).on('keydown',function(e) {
+                    socket.emit('keychange', {state:'down',stamp:(new Date().getTime()),key: e.keyCode});
+                });
             });
 
             var keystate = {};
@@ -353,7 +356,7 @@ stats.begin();
                                 if (isKeyUp('space'))
                                     jump_force_added = max_jump_force;
                                 vvelocity -= (gravity * ticks);
-                                ship.position.y += vvelocity;
+                                ship.position.y += vvelocity * ticks;
                                 if (ship.position.y <= 0) {
                                     is_jumping = 0;
                                     ship.position.y = 0;
@@ -384,9 +387,9 @@ stats.begin();
                                         fvelocity = 0;
                                 }
                             }
-                            ship.position.x += hvelocity;
-                            ship.position.z -= fvelocity;
-                            camera.position.z -= fvelocity;
+                            ship.position.x += hvelocity * ticks;
+                            ship.position.z -= fvelocity * ticks;
+                            camera.position.z -= fvelocity * ticks;
                         }
                         if (key == keystream[0])
                             break;

@@ -166,8 +166,8 @@
                     camera.position.z = 40/(is_vr?1:2);
                     camera.rotation.x -= 0.3;
 
-                    if (is_vr)
-                        orientation = new THREE.DeviceOrientationControls(camera);
+                    //if (is_vr)
+                        //orientation = new THREE.DeviceOrientationControls(camera);
 
                     scene = new THREE.Scene();
 
@@ -263,8 +263,8 @@
 
                     if (!level_started && grabKeyPressed('space')) {
                         level_started = 0;
-                        if (is_vr)
-                            orientation.reset();
+                        //if (is_vr)
+                            //orientation.reset();
                         renderer.setClearColor(0x000000);
                         scene.add(ship);
                         level_started = 1;
@@ -289,8 +289,8 @@
                         }
                     }
                     else if (level_started) {
-                        if (grabKeyPressed('0'))
-                            orientation.reset();
+                        //if (grabKeyPressed('0'))
+                            //orientation.reset();
                         if (isKeyDown('space')) {
                             if (!is_jumping) {
                                 is_jumping = 1;
@@ -348,8 +348,8 @@
 
                 function render() {
 
-                    if (is_vr)
-                        orientation.update();
+                   // if (is_vr)
+                        //orientation.update();
                     trueRender.render( scene, camera );
 
                 }

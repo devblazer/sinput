@@ -171,10 +171,10 @@
 
                     document.body.appendChild( stats.domElement );
 
-                    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+                    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 300);
                     camera.position.y = is_vr?25:15;
                     camera.position.z = is_vr?40:20;
-                    camera.rotation.x -= is_vr?0.6:0.3;
+                    camera.rotation.x -= is_vr?0.4:0.3;
 
                     //if (is_vr)
                         //orientation = new THREE.DeviceOrientationControls(camera);
@@ -279,7 +279,7 @@ stats.begin();
                         scene.add(ship);
                         level_started = 1;
 
-                        for (var y = 0; y < 4; y++) {
+                        for (var y = 0; y < 50; y++) {
                             for (var x = 0; x < 9; x += 2)
                                 createPlatform(x, (y*8)+0, 0, 1, 1 * (0.6 + (x / 16)), 0, 0);
                             for (var x = 1; x < 9; x += 2)

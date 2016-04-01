@@ -78,10 +78,9 @@ THREE.DeviceOrientationControls = function ( object ) {
 	var base = {alpha:0,beta:0,gamma:0,orient:0};
 	this.reset = function() {
 		lastalpha = base.alpha = scope.deviceOrientation.alpha;
-		console.log(scope.deviceOrientation);
-		console.log(scope.screenOrientation);
 	};
-var lastalpha = 0;
+
+	var lastalpha = 0;
 	var s =0.25;
 
 	this.update = function () {

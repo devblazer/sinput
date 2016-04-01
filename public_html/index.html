@@ -24,10 +24,10 @@
     <script src="js/threejs/controls/DeviceOrientationControls.js"></script>
     <script src="js/threejs/renderers/Projector.js"></script>
     <script src="js/threejs/effects/CardboardEffect.js"></script>
-    <script src="js/loaders/DDSLoader.js"></script>
-    <script src="js/loaders/MTLLoader.js"></script>
-    <script src="js/loaders/OBJLoader.js"></script>
-    <script src="js/Detector.js"></script>
+    <script src="js/threejs/loaders/DDSLoader.js"></script>
+    <script src="js/threejs/loaders/MTLLoader.js"></script>
+    <script src="js/threejs/loaders/OBJLoader.js"></script>
+    <script src="js/threejs/libs/stats.min.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -146,7 +146,7 @@
 
                 var container;
 
-                var camera, scene, renderer, orientation,trueRender,effect,ship;
+                var camera, scene, renderer, orientation,trueRender,effect,ship,stats;
 
                 var cube, plane;
 
@@ -161,10 +161,20 @@
                 function init() {
                     container = document.getElementById('game');
 
+                    stats = new Stats();
+                    stats.setMode( 0 ); // 0: fps, 1: ms, 2: mb
+
+// align top-left
+                    stats.domElement.style.position = 'absolute';
+                    stats.domElement.style.left = '0px';
+                    stats.domElement.style.top = '0px';
+
+                    document.body.appendChild( stats.domElement );
+
                     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-                    camera.position.y = 15;
-                    camera.position.z = 50/(is_vr?1:2.5);
-                    camera.rotation.x -= 0.3;
+                    camera.position.y = is_vr?25:15;
+                    camera.position.z = is_vr?40:20;
+                    camera.rotation.x -= is_vr?0.6:0.3;
 
                     //if (is_vr)
                         //orientation = new THREE.DeviceOrientationControls(camera);
@@ -258,7 +268,7 @@
                 var faccel = 0.01;
 
                 function animate() {
-
+stats.begin();
                     requestAnimationFrame( animate );
 
                     if (!level_started && grabKeyPressed('space')) {
@@ -343,7 +353,7 @@
                     }
 
                     render();
-
+stats.end();
                 }
 
                 function render() {

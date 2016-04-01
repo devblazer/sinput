@@ -133,6 +133,7 @@
                 is_vr = true;
                 socket.emit('vr_identifier', password);
                 socket.on('keychange',function(obj){
+                    obj.stamp += 60;
                     if (obj.state=='up') {
                         if (monitorkeystate[obj.key])
                             keystream.push(obj);

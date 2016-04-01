@@ -28,11 +28,20 @@
     <script src="js/threejs/loaders/MTLLoader.js"></script>
     <script src="js/threejs/loaders/OBJLoader.js"></script>
     <script src="js/threejs/libs/stats.min.js"></script>
+    <script src="js/level.js"></script>
 
     <script>
         $(document).ready(function() {
             var socket = io();
             var enabledHeadMovement = true;
+
+            var levelRowIndex = [];
+            for (var p in levelData) {
+                var row = levelData[p];
+                var c = $.isArray(row[row.length-1]) ? 1 : row[row.length-1];
+                for (var n=0;n<c;n++)
+                    levelRowIndex.push(p);
+            }
 
             socket.on('error', console.error.bind(console));
             socket.on('message', console.log.bind(console));
@@ -268,6 +277,9 @@
                 var fspeed = 1.2;
                 var faccel = 0.01;
                 var laststep = (new Date()).getTime();
+                var levelProgress = 0;
+                var tileProgress = 0.5;
+                var rowBlocks = [];
 
                 function animate() {
                     stats.begin();
@@ -284,24 +296,27 @@
                         scene.add(ship);
                         level_started = 1;
 
-                        for (var y = 0; y < 5; y++) {
-                            for (var x = 0; x < 9; x += 2)
-                                createPlatform(x, (y*8)+0, 0, 1, 1 * (0.6 + (x / 16)), 0, 0);
-                            for (var x = 1; x < 9; x += 2)
-                                createPlatform(x, (y*8)+1, 0, 1, 0, 1 * (0.6 + (x / 16)), 0);
-                            for (var x = 0; x < 9; x += 2)
-                                createPlatform(x, (y*8)+2, 0, 1, 0, 0, 1 * (0.6 + (x / 16)));
-                            for (var x = 1; x < 9; x += 2)
-                                createPlatform(x, (y*8)+3, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 0);
-                            for (var x = 0; x < 9; x += 2)
-                                createPlatform(x, (y*8)+4, 0, 1, 1 * (0.6 + (x / 16)), 0, 1 * (0.6 + (x / 16)));
-                            for (var x = 1; x < 9; x += 2)
-                                createPlatform(x, (y*8)+5, 0, 1, 0, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
-                            for (var x = 0; x < 9; x += 2)
-                                createPlatform(x, (y*8)+6, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
-                            for (var x = 1; x < 9; x += 2)
-                                createPlatform(x, (y*8)+7, 0, 1, 1 * (0.6 + (x / 16)), (0.6 + (x / 16))/2, 0);
-                        }
+                        for (var n=0;n<30;n++)
+                            addTileRow(n);
+                        /*
+                         for (var y = 0; y < 5; y++) {
+                         for (var x = 0; x < 9; x += 2)
+                         createPlatform(x, (y*8)+0, 0, 1, 1 * (0.6 + (x / 16)), 0, 0);
+                         for (var x = 1; x < 9; x += 2)
+                         createPlatform(x, (y*8)+1, 0, 1, 0, 1 * (0.6 + (x / 16)), 0);
+                         for (var x = 0; x < 9; x += 2)
+                         createPlatform(x, (y*8)+2, 0, 1, 0, 0, 1 * (0.6 + (x / 16)));
+                         for (var x = 1; x < 9; x += 2)
+                         createPlatform(x, (y*8)+3, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 0);
+                         for (var x = 0; x < 9; x += 2)
+                         createPlatform(x, (y*8)+4, 0, 1, 1 * (0.6 + (x / 16)), 0, 1 * (0.6 + (x / 16)));
+                         for (var x = 1; x < 9; x += 2)
+                         createPlatform(x, (y*8)+5, 0, 1, 0, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
+                         for (var x = 0; x < 9; x += 2)
+                         createPlatform(x, (y*8)+6, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
+                         for (var x = 1; x < 9; x += 2)
+                         createPlatform(x, (y*8)+7, 0, 1, 1 * (0.6 + (x / 16)), (0.6 + (x / 16))/2, 0);
+                         }*/
                     }
                     else if (level_started) {
                         //if (grabKeyPressed('0'))
@@ -325,6 +340,7 @@
                                 jump_force_added = max_jump_force;
                             vvelocity -= (gravity * ticks);
                             ship.position.y += vvelocity * ticks;
+                            //if (vvelocity<0 &&)
                             if (ship.position.y <= 0) {
                                 is_jumping = 0;
                                 ship.position.y = 0;
@@ -358,10 +374,53 @@
                         ship.position.x += hvelocity * ticks;
                         ship.position.z -= fvelocity * ticks;
                         camera.position.z -= fvelocity * ticks;
+                        tileProgress += (fvelocity * ticks / 10);
+
+                        while (tileProgress > 1) {
+                            tileProgress-=1;
+                            addTileRow(levelProgress+30);
+                            levelProgress++;
+                            if (levelProgress > 5)
+                                removeTileRow(levelProgress-5);
+                        }
                     }
 
                     render();
                     stats.end();
+                }
+                function addTileRow(ind) {
+                    rowBlocks[ind] = [];
+                    var row = levelData[levelRowIndex[ind]];
+                    for (var p in row) {
+                        var tile = row[p];
+                        if ($.isArray(tile)) {
+                            var ts = tile[0];
+                            if (!$.isArray(ts))
+                                ts = [ts];
+                            for (var t in ts) {
+                                rowBlocks[ind].push(createPlatform(ts[t]+4,ind,tile[2],tile[3],tile[4]/255,tile[5]/255,tile[6]/255));
+                            }
+                        }
+                    }
+                }
+                function removeTileRow(ind) {
+                    for (var p in rowBlocks[ind])
+                        scene.remove(rowBlocks[ind][p]);
+                    rowBlocks[ind] = null;
+                }
+                function getTiles(){
+                    var ys = 0, ye = 0, xs= 0,xe=0;
+                    if (tileProgress<0.2)
+                        ys = -1;
+                    if (tileProgress>0.8)
+                        ye = 1;
+                    var spx = (ship.position.x+22.5)/5;
+                    spx = spx-Math.floor(spx);
+                    if (spx<0.25)
+                        xs = -1;
+                    if (spx>0.75)
+                        xe = 1;
+                    var tiles = [];
                 }
 
                 function render() {

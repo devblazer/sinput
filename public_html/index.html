@@ -200,7 +200,7 @@
                         effect.setSize(window.innerWidth, window.innerHeight);
                         trueRender = effect;
                     }
-/*
+
                     var onProgress = function ( xhr ) {
                         if ( xhr.lengthComputable ) {
                             var percentComplete = xhr.loaded / xhr.total * 100;
@@ -237,7 +237,7 @@
                         }, onProgress, onError );
 
                     });
-*/
+
                     window.addEventListener( 'resize', onWindowResize, false );
                 }
 
@@ -279,7 +279,7 @@ stats.begin();
                         scene.add(ship);
                         level_started = 1;
 
-                        for (var y = 0; y < 50; y++) {
+                        for (var y = 0; y < 5; y++) {
                             for (var x = 0; x < 9; x += 2)
                                 createPlatform(x, (y*8)+0, 0, 1, 1 * (0.6 + (x / 16)), 0, 0);
                             for (var x = 1; x < 9; x += 2)
@@ -316,11 +316,11 @@ stats.begin();
                             if (isKeyUp('space'))
                                 jump_step = jump_step_max;
                             vvelocity -= gravity;
-                            /*ship.position.y += vvelocity;
+                            ship.position.y += vvelocity;
                             if (ship.position.y <= 0) {
                                 is_jumping = 0;
                                 ship.position.y = 0;
-                            }*/
+                            }
                         }
                         else {
                             if (isKeyDown('left')) {
@@ -347,8 +347,8 @@ stats.begin();
                                     fvelocity = 0;
                             }
                         }
-                      /*  ship.position.x += hvelocity;
-                        ship.position.z -= fvelocity;*/
+                        ship.position.x += hvelocity;
+                        ship.position.z -= fvelocity;
                         camera.position.z -= fvelocity;
                     }
 

@@ -219,7 +219,8 @@
                             ship.scale.set(0.0125,0.0125,0.0125);
                             //ship.position.z = -50;
                             ship.position.x = -17.5;
-                            ship.rotation.y  = 0;
+                            ship.rotation.y = 0;
+                            ship.position.y  = 0;
 
                         }, onProgress, onError );
 
@@ -241,6 +242,18 @@
                 }
 
                 var level_started = false;
+                var is_jumping = 0;
+                var jump_force = 0.09;
+                var jump_step = 0;
+                var jump_step_max = 8;
+                var gravity = 0.03;
+                var vvelocity = 0;
+                var hvelocity = 0;
+                var hspeed = 0.45;
+                var haccel = 0.05;
+                var fvelocity = 0;
+                var fspeed = 1.2;
+                var faccel = 0.01;
 
                 function animate() {
 
@@ -250,23 +263,79 @@
                         level_started = 0;
                         if (is_vr)
                             orientation.reset();
-                        renderer.setClearColor( 0x000000 );
-                        scene.add( ship );
+                        renderer.setClearColor(0x000000);
+                        scene.add(ship);
+                        level_started = 1;
 
-                        for (var x=0;x<8;x+=2)
-                            createPlatform(x,0,0,1,1*(0.6+(x/16)),0,0);
-                        for (var x=1;x<8;x+=2)
-                            createPlatform(x,1,0,1,0,1*(0.6+(x/16)),0);
-                        for (var x=0;x<8;x+=2)
-                            createPlatform(x,2,0,1,0,0,1*(0.6+(x/16)));
-                        for (var x=1;x<8;x+=2)
-                            createPlatform(x,3,0,1,1*(0.6+(x/16)),1*(0.6+(x/16)),0);
-                        for (var x=0;x<8;x+=2)
-                            createPlatform(x,4,0,1,1*(0.6+(x/16)),0,1*(0.6+(x/16)));
-                        for (var x=1;x<8;x+=2)
-                            createPlatform(x,5,0,1,0,1*(0.6+(x/16)),1*(0.6+(x/16)));
-                        for (var x=0;x<8;x+=2)
-                            createPlatform(x,6,0,1,1*(0.6+(x/16)),1*(0.6+(x/16)),1*(0.6+(x/16)));
+                        for (var y = 0; y < 40; y++) {
+                            for (var x = 0; x < 8; x += 2)
+                                createPlatform(x, (y*8)+0, 0, 1, 1 * (0.6 + (x / 16)), 0, 0);
+                            for (var x = 1; x < 8; x += 2)
+                                createPlatform(x, (y*8)+1, 0, 1, 0, 1 * (0.6 + (x / 16)), 0);
+                            for (var x = 0; x < 8; x += 2)
+                                createPlatform(x, (y*8)+2, 0, 1, 0, 0, 1 * (0.6 + (x / 16)));
+                            for (var x = 1; x < 8; x += 2)
+                                createPlatform(x, (y*8)+3, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 0);
+                            for (var x = 0; x < 8; x += 2)
+                                createPlatform(x, (y*8)+4, 0, 1, 1 * (0.6 + (x / 16)), 0, 1 * (0.6 + (x / 16)));
+                            for (var x = 1; x < 8; x += 2)
+                                createPlatform(x, (y*8)+5, 0, 1, 0, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
+                            for (var x = 0; x < 8; x += 2)
+                                createPlatform(x, (y*8)+6, 0, 1, 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)), 1 * (0.6 + (x / 16)));
+                            for (var x = 1; x < 8; x += 2)
+                                createPlatform(x, (y*8)+7, 0, 1, 1 * (0.6 + (x / 16)), (0.6 + (x / 16))/2, 0);
+                        }
+                    }
+                    else if (level_started) {
+                        if (isKeyDown('space')) {
+                            if (!is_jumping) {
+                                is_jumping = 1;
+                                jump_step = 0;
+                                vvelocity = 0;
+                            }
+                            if (jump_step < jump_step_max) {
+                                jump_step++;
+                                vvelocity += jump_force;
+                            }
+                        }
+                        if (is_jumping) {
+                            if (isKeyUp('space'))
+                                jump_step = jump_step_max;
+                            vvelocity -= gravity;
+                            ship.position.y += vvelocity;
+                            if (ship.position.y <= 0) {
+                                is_jumping = 0;
+                                ship.position.y = 0;
+                            }
+                        }
+                        else {
+                            if (isKeyDown('left')) {
+                                hvelocity -= haccel;
+                                if (hvelocity < -hspeed)
+                                    hvelocity = -hspeed;
+                            }
+                            if (isKeyDown('right')) {
+                                hvelocity += haccel;
+                                if (hvelocity > hspeed)
+                                    hvelocity = hspeed;
+                            }
+                            if (isKeyUp('left') && isKeyUp('right')) {
+                                hvelocity = 0;
+                            }
+                            if (isKeyDown('up')) {
+                                fvelocity += faccel;
+                                if (fvelocity > fspeed)
+                                    fvelocity = fspeed;
+                            }
+                            if (isKeyDown('down')) {
+                                fvelocity -= faccel;
+                                if (fvelocity < 0)
+                                    fvelocity = 0;
+                            }
+                        }
+                        ship.position.x += hvelocity;
+                        ship.position.z -= fvelocity;
+                        camera.position.z -= fvelocity;
                     }
 
                     render();

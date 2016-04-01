@@ -77,12 +77,20 @@ THREE.DeviceOrientationControls = function ( object ) {
 
 	var base = {alpha:0,beta:0,gamma:0,orient:0};
 	this.reset = function() {
-		base.alpha = scope.deviceOrientation.alpha;
+		lastalpha = base.alpha = scope.deviceOrientation.alpha;
 		console.log(scope.deviceOrientation);
 		console.log(scope.screenOrientation);
 	};
+var lastalpha = 0;
 
 	this.update = function () {
+		if (Math.abs(base.alpha - lastalpha) < 3) {
+			if (base.alpha < scope.deviceOrientation.alpha)
+				base.alpha += 0.3;
+			if (base.alpha > scope.deviceOrientation.alpha)
+				base.alpha -= 0.3;
+		}
+
 
 		if ( scope.enabled === false ) return;
 

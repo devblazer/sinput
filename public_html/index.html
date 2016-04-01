@@ -32,6 +32,7 @@
     <script>
         $(document).ready(function() {
             var socket = io();
+            var enabledHeadMovement = true;
 
             socket.on('error', console.error.bind(console));
             socket.on('message', console.log.bind(console));
@@ -176,8 +177,8 @@
                     camera.position.z = is_vr?40:20;
                     camera.rotation.x -= is_vr?0.4:0.3;
 
-                    //if (is_vr)
-                    //orientation = new THREE.DeviceOrientationControls(camera);
+                    if (is_vr && enabledHeadMovement)
+                        orientation = new THREE.DeviceOrientationControls(camera);
 
                     scene = new THREE.Scene();
 
@@ -253,19 +254,6 @@
 
                 }
 
-                /*var level_started = false;
-                 var is_jumping = 0;
-                 var jump_force = 0.09;
-                 var jump_step = 0;
-                 var jump_step_max = 8;
-                 var gravity = 0.03;
-                 var vvelocity = 0;
-                 var hvelocity = 0;
-                 var hspeed = 0.45;
-                 var haccel = 0.05;
-                 var fvelocity = 0;
-                 var fspeed = 1.2;
-                 var faccel = 0.01;*/
                 var level_started = false;
                 var is_jumping = 0;
                 var jump_force_added = 0;
@@ -290,8 +278,8 @@
 
                     if (!level_started && grabKeyPressed('space')) {
                         level_started = 0;
-                        //if (is_vr)
-                        //orientation.reset();
+                        if (is_vr && enabledHeadMovement)
+                            orientation.reset();
                         renderer.setClearColor(0x000000);
                         scene.add(ship);
                         level_started = 1;
@@ -378,8 +366,8 @@
 
                 function render() {
 
-                    // if (is_vr)
-                    //orientation.update();
+                    if (is_vr && enabledHeadMovement)
+                        orientation.update();
                     trueRender.render( scene, camera );
 
                 }

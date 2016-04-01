@@ -24,6 +24,10 @@
     <script src="js/threejs/controls/DeviceOrientationControls.js"></script>
     <script src="js/threejs/renderers/Projector.js"></script>
     <script src="js/threejs/effects/CardboardEffect.js"></script>
+    <script src="js/loaders/DDSLoader.js"></script>
+    <script src="js/loaders/MTLLoader.js"></script>
+    <script src="js/loaders/OBJLoader.js"></script>
+    <script src="js/Detector.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -142,7 +146,7 @@
 
                 var container;
 
-                var camera, scene, renderer, orientation,trueRender,effect;
+                var camera, scene, renderer, orientation,trueRender,effect,ship;
 
                 var cube, plane;
 
@@ -170,7 +174,7 @@
                     scene.add(light);
 
                     var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-                    directionalLight.position.set(2, 3, 1);
+                    directionalLight.position.set(2, 3, 1).normalize();
                     scene.add(directionalLight);
 
                     renderer = new THREE.WebGLRenderer();
@@ -185,6 +189,41 @@
                         effect.setSize(window.innerWidth, window.innerHeight);
                         trueRender = effect;
                     }
+
+                    var onProgress = function ( xhr ) {
+                        if ( xhr.lengthComputable ) {
+                            var percentComplete = xhr.loaded / xhr.total * 100;
+                            console.log( Math.round(percentComplete, 2) + '% downloaded' );
+                        }
+                    };
+
+                    var onError = function ( xhr ) {console.log(xhr); };
+
+                    THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+                    var mtlLoader = new THREE.MTLLoader();
+                    mtlLoader.setBaseUrl( 'models/ship/' );
+                    mtlLoader.setPath( 'models/ship/' );
+                    mtlLoader.load( 'Starship.mtl', function( materials ) {
+
+                        materials.preload();
+
+                        var objLoader = new THREE.OBJLoader();
+                        objLoader.setMaterials( materials );
+                        objLoader.setPath( 'models/ship/' );
+                        objLoader.load( 'Starship.obj', function ( object ) {
+
+                            ship = object;
+                            ship.applyMatrix( new THREE.Matrix4().makeTranslation(0, -0.175, 0) );
+                            ship.applyMatrix( new THREE.Matrix4().makeRotationY(180) );
+                            ship.scale.set(0.0125,0.0125,0.0125);
+                            //ship.position.z = -50;
+                            ship.position.x = -17.5;
+                            ship.rotation.y  = 0;
+
+                        }, onProgress, onError );
+
+                    });
 
                     window.addEventListener( 'resize', onWindowResize, false );
                 }
@@ -212,6 +251,7 @@
                         if (is_vr)
                             orientation.reset();
                         renderer.setClearColor( 0x000000 );
+                        scene.add( ship );
 
                         for (var x=0;x<8;x+=2)
                             createPlatform(x,0,0,1,1*(0.6+(x/16)),0,0);

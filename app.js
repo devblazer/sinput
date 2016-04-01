@@ -75,14 +75,14 @@ io.on('connection', function(socket) {
             delete(keyListeners[vrPassword]);
     });
 
-    socket.on('keychange', function(val){
+    socket.on('keyup', function(val){
         if (inputPassword!==false && keyListeners[inputPassword])
-            keyListeners[inputPassword].emit('keychange',val);
+            keyListeners[inputPassword].emit('keyup',val);
     });
-/*    socket.on('keydown', function(val){
+    socket.on('keydown', function(val){
         if (inputPassword!==false && keyListeners[inputPassword])
             keyListeners[inputPassword].emit('keydown',val);
-    });*/
+    });
 });
 
 app.listen(3000);

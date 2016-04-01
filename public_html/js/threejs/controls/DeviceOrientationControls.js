@@ -84,11 +84,16 @@ THREE.DeviceOrientationControls = function ( object ) {
 var lastalpha = 0;
 
 	this.update = function () {
-		if (Math.abs(base.alpha - lastalpha) < 3) {
-			if (base.alpha < scope.deviceOrientation.alpha)
-				base.alpha += 0.3;
-			if (base.alpha > scope.deviceOrientation.alpha)
+		if (Math.abs(base.alpha - lastalpha) < 1 || Math.abs(base.alpha - lastalpha) > 359) {
+			var diff = scope.deviceOrientation.alpha - base.alpha;
+			if (diff < -180)
+				diff += 360;
+			if (diff > 180)
+				diff -= 360;
+			if (diff < 0)
 				base.alpha -= 0.3;
+			if (diff > 0)
+				base.alpha += 0.3;
 		}
 
 

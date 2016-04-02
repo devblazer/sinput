@@ -280,6 +280,7 @@
                 var levelProgress = 0;
                 var tileProgress = 0.5;
                 var rowBlocks = [];
+                var dbg = false;
 
                 function animate() {
                     stats.begin();
@@ -319,10 +320,12 @@
                          }*/
                     }
                     else if (level_started) {
+                        dbg = false;
                         //if (grabKeyPressed('0'))
                         //orientation.reset();
                         if (isKeyDown('space')) {
                             if (!is_jumping) {
+                                dbg = true;
                                 is_jumping = 1;
                                 vvelocity = 0;
                                 jump_force_added = 0;
@@ -339,12 +342,6 @@
                             if (isKeyUp('space'))
                                 jump_force_added = max_jump_force;
                             vvelocity -= (gravity * ticks);
-                            ship.position.y += vvelocity * ticks;
-                            //if (vvelocity<0 &&)
-                            if (ship.position.y <= 0) {
-                                is_jumping = 0;
-                                ship.position.y = 0;
-                            }
                         }
                         else {
                             if (isKeyDown('left')) {
@@ -371,6 +368,41 @@
                                     fvelocity = 0;
                             }
                         }
+
+                        var colTiles = getTiles(levelProgress);
+if (dbg)console.log(colTiles);
+
+                        if (vvelocity<=0) {
+                            var isBelow = false;
+                            for (var t in colTiles) {
+                                var tile = colTiles[t];
+                                if (vvelocity && tile[2] + tile[3] > ship.position.y + (vvelocity * ticks) && tile[2] + tile[3] <= ship.position.y) {
+                                    ship.position.y = tile[2] + tile[3];
+                                    vvelocity = 0;
+                                    is_jumping = 0;
+                                    isBelow = true;
+                                }
+                                else if (tile[2] + tile[3] == ship.position.y)
+                                    isBelow = true;
+                            }
+                            if(!isBelow && !vvelocity && !is_jumping) {
+                                vvelocity = 0;
+                                is_jumping = 1;
+                                jump_force_added = max_jump_force;
+                            }
+                        }
+                       else if (vvelocity>0) {
+                            for (var t in colTiles) {
+                                var tile = colTiles[t];
+                                if (tile[2] < ship.position.y+1 + (vvelocity * ticks) && tile[2] >= ship.position.y+1) {
+                                    ship.position.y = tile[2]-1;
+                                    vvelocity /= -2;
+                                    jump_force_added = max_jump_force;
+                                }
+                            }
+                        }
+
+                        ship.position.y += vvelocity * ticks;
                         ship.position.x += hvelocity * ticks;
                         ship.position.z -= fvelocity * ticks;
                         camera.position.z -= fvelocity * ticks;
@@ -390,6 +422,8 @@
                 }
                 function addTileRow(ind) {
                     rowBlocks[ind] = [];
+                    if (ind<0 || ind>=levelRowIndex.length)
+                        return;
                     var row = levelData[levelRowIndex[ind]];
                     for (var p in row) {
                         var tile = row[p];
@@ -408,19 +442,38 @@
                         scene.remove(rowBlocks[ind][p]);
                     rowBlocks[ind] = null;
                 }
-                function getTiles(){
+                function getTiles(offset){
                     var ys = 0, ye = 0, xs= 0,xe=0;
-                    if (tileProgress<0.2)
+                    if (tileProgress<0.1)
                         ys = -1;
-                    if (tileProgress>0.8)
+                    if (tileProgress>0.9)
                         ye = 1;
                     var spx = (ship.position.x+22.5)/5;
+                    xs = xe = Math.floor(spx)-4;
                     spx = spx-Math.floor(spx);
                     if (spx<0.25)
-                        xs = -1;
+                        xs--;
                     if (spx>0.75)
-                        xe = 1;
+                        xe++;
+
                     var tiles = [];
+                    for (var y=Math.max(0,ys+offset);y<=Math.min(levelRowIndex.length,ye+offset);y++) {
+                        var row = levelData[levelRowIndex[y]];
+                        for (var g in row) {
+                            var group = row[g];
+                            if ($.isArray(group)) {
+                                var xts = group[0];
+                                if (!$.isArray(xts))
+                                    xts = [xts];
+                                for (var x in xts) {
+                                    if (xts[x] >= xs && xts[x] <= xe) {
+                                        tiles.push([xts[x]+4,y,group[2]-0.5,group[3]/2,group[1]]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return tiles;
                 }
 
                 function render() {
@@ -448,7 +501,7 @@
 
                     cube = new THREE.Mesh( geometry, material );
                     cube.position.x = (5*x)-20;
-                    cube.position.y = z-0.5;
+                    cube.position.y = z-1;
                     cube.position.z = 10*-y;
                     scene.add( cube );
                     return cube;

@@ -321,8 +321,8 @@
                     }
                     else if (level_started) {
                         dbg = false;
-                        //if (grabKeyPressed('0'))
-                        //orientation.reset();
+                        if (grabKeyPressed('0') && is_vr && enabledHeadMovement)
+                            orientation.reset();
                         if (isKeyDown('space')) {
                             if (!is_jumping) {
                                 dbg = true;
